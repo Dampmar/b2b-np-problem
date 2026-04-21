@@ -179,3 +179,12 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# MikTex Files
+*.log
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.out
+*.synctex(busy)

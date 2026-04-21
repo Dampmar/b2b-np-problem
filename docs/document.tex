@@ -1,0 +1,72 @@
+\documentclass[letterpaper]{article}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{mdframed}
+\setcounter{secnumdepth}{0} % Remove Section numbering
+\setlength{\parindent}{0pt}
+
+% Set the font size for section and subsection titles
+\usepackage{sectsty}
+\sectionfont{\large\bfseries}
+\subsectionfont{\normalsize\bfseries}
+
+\title{\textbf{B2B Distribution Problem}}
+\author{\textbf{Texas Tech University - Computer Science 3383}
+    \\ Adrian De Souza, Daniel Marin and Andy Sanchez}
+\date{May 2026}
+
+\begin{document}
+\maketitle 
+
+\section{Problem Description}
+A mid-sized industrial company operates across multiple regions and needs to determine where to build or lease storage and distribution facilities to service all client business while incurring the minimum operational cost possible for the business. The company has a fixed set of client sites (factories, plants \& distributors) that require regular shipments of raw materials and finished goods. There is also a fixed set of candidate sites where the company can build or lease storage facility locations each of which can serve clients within a defined coverage radius. The core question is: 
+
+\begin{quote}
+    What is the minimum number of storage facilities required to cover all client sites, and where are they located in order to minimize the total operational cost?
+\end{quote}
+
+The core idea behind this problem is to find an optimal solution to a real world problem faced by distribution companies like logistic providers, pharmaceutical companies, and industrial part suppliers. Solving it optimally determines both capital expenditure and long-term operational efficiency required to meet client demand while reducing operational costs. 
+
+\subsection{Inputs}
+The problem takes the following inputs:
+\begin{table}[H]
+    \centering 
+    \renewcommand{\arraystretch}{1.3} % Increase row height
+    \begin{tabular}{l p{0.6\textwidth}}
+        \toprule
+        \textbf{Input} & \textbf{Description} \\
+        \midrule 
+        Client Sites - \textbf{\textit{C}}             & A set of client sites: $C = \{c_1, c_2, ..., c_n\}$ where each $c_i$ represents a client site with specific coordinates (latitude and longitude). \\
+        Candidate Facility Sites - \textbf{\textit{F}} & A set of candidate facility sites: $F = \{f_1, f_2, ..., f_m\}$ where each $f_j$ represents a potential location for a storage facility with specific coordinates (latitude and longitude), and annual operating cost $o_j$. \\
+        Budget - \textbf{\textit{B}}                   & The total budget available for building or leasing storage facilities. \\
+        Reach Radius - \textbf{\textit{R}}             & The maximum distance (in kilometers) that a storage facility can effectively serve client sites. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Outputs}
+A subset of the candidate facility sites is selected to minimize the total operational cost while covering all client sites. The problem requires the following outputs:
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.3} % Increase row height
+    \begin{tabular}{l p{0.6\textwidth}}
+        \toprule
+        \textbf{Output} & \textbf{Description} \\
+        \midrule
+        Selected Facility Sites - \textbf{\textit{S}} & A subset of candidate facility sites: $S \subseteq F$ that are selected for building or leasing storage facilities. \\
+        Total Operational Cost - \textbf{\textit{C}}  & The total operational cost incurred by the selected facilities, calculated as $C = \sum_{f_j \in S} o_j$. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Informal Argument Complexity for NP-Hard Problem - Set Cover Reduction}
+The B2B Distribution Problem can be informally argued to be NP-hard by reducing it from the well-known NP-hard problem, the Set Cover Problem. The Set Cover Problem asks whether a given universe of elements can be covered by a specified number of subsets from a collection of subsets. In the context of the B2B Distribution Problem, the universe of elements corresponds to the client sites, and the subsets correspond to the candidate facility sites that can cover those client sites within a certain radius. The decision version of the B2B Distribution Problem can be stated as: "Given a set of client sites, a set of candidate facility sites with associated costs, and a budget, is there a subset of candidate facility sites that can cover all client sites within the budget?" This is analogous to asking whether there exists a set cover of a certain size, which is known to be NP-complete, that is optimized for cost. Therefore, since the B2B Distribution Problem can be reduced from the Set Cover Problem, it is NP-hard.
+
+\end{document}
+
