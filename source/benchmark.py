@@ -26,6 +26,14 @@ import os
 import statistics
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Set Global Font Family for all plots
+plt.rcParams["font.family"] = 'serif'
+plt.rcParams["font.size"] = 12
+plt.rcParams["font.serif"] = ['Georgia']
+
 from helpers import generate_instance
 from greedy import greedy
 
@@ -111,6 +119,34 @@ def aggregate(trials):
         "max_cost_ratio":     max(cost_ratios) if cost_ratios else None,
         "paired_feasible":    len(both_feasible),
     }
+
+
+def plot_bf_scatter(all_rows):
+    """Scatter plot of m vs brute-force avg time with exponential trendline."""
+    ms = np.array([r["m"] for r in all_rows])
+    bf_times = np.array([r["bf_avg_time"] for r in all_rows])
+    gd_times = np.array([r["greedy_avg_time"] for r in all_rows])
+
+    # Fit exponential: t = a * exp(b * m)  →  ln(t) = ln(a) + b*m
+    log_times = np.log(bf_times)
+    b, ln_a = np.polyfit(ms, log_times, 1)
+    a = np.exp(ln_a)
+
+    m_fit = np.linspace(ms.min(), ms.max(), 300)
+    t_fit = a * np.exp(b * m_fit)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter(ms, bf_times, color="r", zorder=3, label="Observed (avg over trials)")      
+    ax.plot(m_fit, t_fit, color="pink", linewidth=2, label=rf"Best Fit Trendline: $t = {a:.2e} \cdot e^{{{b:.3f}\,m}}$")       
+    ax.scatter(ms, gd_times, color="b", zorder=3, label="Greedy (avg over trials)")        
+    ax.set_xlabel("Number of facilities $m$", fontsize=12)
+    ax.set_ylabel("Brute-force avg time (s)", fontsize=12)
+    ax.set_title("Brute-force runtime $s$ vs. Number of Facilities $m$", fontsize=13)
+    ax.legend(fontsize=10)
+    ax.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    plt.savefig("bf_runtime_scatter.png", dpi=300)
+    plt.show()
 
 
 def main():
@@ -200,6 +236,8 @@ def main():
     if paired:
         print(f"  Greedy matched optimum     : {exact_matches}/{paired} paired trials "
               f"({100*exact_matches/paired:.1f}%)")
+
+    plot_bf_scatter(all_rows)
 
 
 if __name__ == "__main__":
