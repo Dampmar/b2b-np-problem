@@ -8,13 +8,16 @@
 \usepackage{enumitem}
 \usepackage{float}
 \usepackage{mdframed}
+\usepackage{amsmath}
 \setcounter{secnumdepth}{0} % Remove Section numbering
 \setlength{\parindent}{0pt}
+\setlist[enumerate]{leftmargin=*, align=left}
 
 % Set the font size for section and subsection titles
 \usepackage{sectsty}
-\sectionfont{\large\bfseries}
-\subsectionfont{\normalsize\bfseries}
+\sectionfont{\Large\bfseries}
+\subsectionfont{\large\bfseries}
+\subsubsectionfont{\normalsize\bfseries}
 
 \title{\textbf{B2B Distribution Problem}}
 \author{\textbf{Texas Tech University - Computer Science 3383}
@@ -65,8 +68,156 @@ A subset of the candidate facility sites is selected to minimize the total opera
     \end{tabular}
 \end{table}
 
-\subsection{Informal Argument Complexity for NP-Hard Problem - Set Cover Reduction}
-The B2B Distribution Problem can be informally argued to be NP-hard by reducing it from the well-known NP-hard problem, the Set Cover Problem. The Set Cover Problem asks whether a given universe of elements can be covered by a specified number of subsets from a collection of subsets. In the context of the B2B Distribution Problem, the universe of elements corresponds to the client sites, and the subsets correspond to the candidate facility sites that can cover those client sites within a certain radius. The decision version of the B2B Distribution Problem can be stated as: "Given a set of client sites, a set of candidate facility sites with associated costs, and a budget, is there a subset of candidate facility sites that can cover all client sites within the budget?" This is analogous to asking whether there exists a set cover of a certain size, which is known to be NP-complete, that is optimized for cost. Therefore, since the B2B Distribution Problem can be reduced from the Set Cover Problem, it is NP-hard.
+\subsection{Formal Problem Definition}
+Given the inputs defined above, the B2B Distribution Problem can be formally stated as the following optimization problem:
+
+\[
+    \min_{S \subseteq F}\ \sum_{f_j \in S} o_j
+\]
+
+Subject to the following constraints:
+\begin{itemize}
+    \item \textbf{Coverage constraint:} $\forall\, c_i \in C,\ \exists\, f_j \in S : d(c_i, f_j) \leq R$, where $d(\cdot,\cdot)$ is the Euclidean distance between two coordinate points.
+    \item \textbf{Budget constraint:} $\displaystyle\sum_{f_j \in S} o_j \leq B$
+    \item \textbf{Selection constraint:} $S \subseteq F$
+\end{itemize}
+
+In other words, we seek the least-cost subset of candidate facilities that (a) places every client site within the reach radius of at least one selected facility, and (b) keeps the total operating cost within the available budget.
+
+\subsection{NP-Hardness: Reduction from Set Cover}
+The B2B Distribution Problem is NP-hard. We establish this via a polynomial-time reduction from the classic NP-complete \textit{Set Cover} problem. Informally, the hardness arises because selecting the cheapest covering subset forces a search over all $2^m$ candidate subsets, with no known polynomial-time shortcut, leading to combinatorial explosion as the number of facilities grows.
+
+\subsubsection{The Set Cover Problem}
+Given a universe $U = \{u_1, u_2, \ldots, u_n\}$ of $n$ elements, a collection of subsets $\mathcal{S} = \{S_1, S_2, \ldots, S_m\}$ with $S_j \subseteq U$, and a positive integer $k$, the Set Cover decision problem asks: does there exist a sub-collection $\mathcal{S}' \subseteq \mathcal{S}$ with $|\mathcal{S}'| \leq k$ such that $\bigcup_{S_j \in \mathcal{S}'} S_j = U$? This problem is NP-complete.
+
+\subsubsection{Set Cover $\leq_p$ B2B Distribution}
+Given an arbitrary Set Cover instance $(U, \mathcal{S}, k)$, we construct a B2B instance in polynomial time as follows:
+
+\textbf{Instance transformation:}
+\begin{enumerate}
+    \item For each element $u_i \in U$, create a client site $c_i$ placed at coordinates $(i,\, 0)$ in a 2D plane.
+    \item For each subset $S_j \in \mathcal{S}$, create a candidate facility $f_j$ with uniform operational cost $o_j = 1$, positioned at the centroid of the client sites $\{c_i : u_i \in S_j\}$.
+    \item Set the reach radius $R$ large enough so that facility $f_j$ covers client $c_i$ if and only if $u_i \in S_j$.
+    \item Set the budget $B = k$.
+\end{enumerate}
+
+\textbf{Correctness:} The B2B instance has a feasible solution of cost $\leq B = k$ if and only if the Set Cover instance has a cover of size $\leq k$.
+\begin{itemize}
+    \item ($\Rightarrow$) If a set cover $\mathcal{S}' \subseteq \mathcal{S}$ of size $\leq k$ covers all of $U$, the corresponding facilities $\{f_j : S_j \in \mathcal{S}'\}$ cover all client sites in the B2B instance. Since each $o_j = 1$, the total cost equals $|\mathcal{S}'| \leq k = B$, satisfying both the coverage and budget constraints.
+    \item ($\Leftarrow$) If a B2B solution $S^* \subseteq F$ of cost $\leq B = k$ covers all clients, then $|S^*| \leq k$ (since each $o_j = 1$). The corresponding subsets $\{S_j : f_j \in S^*\}$ therefore form a set cover of size $\leq k$ for $U$.
+\end{itemize}
+
+This transformation runs in polynomial time in $|U|$ and $|\mathcal{S}|$. Therefore, Set Cover $\leq_p$ B2B Distribution, which implies the B2B Distribution Problem is NP-hard.
+
+\section{Methodology}
+To solve the B2B Distribution Problem, we will implement two algorithmic approaches: an exact brute-force approach and a greedy approximation algorithm. The exact brute-force approach will guarantee finding the optimal solution but may be computationally infeasible for larger instances of the problem due to its exponential time complexity. On the other hand, the greedy approximation algorithm will provide a solution that is not guaranteed to be optimal but can be computed efficiently, making it suitable for larger instances of the problem. We will analyze the time complexities of both approaches and compare their performance on relatively small test cases to evaluate their effectiveness in solving the B2B Distribution Problem.
+\newline 
+\newline 
+This will allow us to understand the trade-offs between optimality and computational efficiency in solving this problem, and to identify scenarios where one approach may be more suitable than the other based on the size and complexity of the input data. Placing emphasis on how at scale approximations and randomized algorithms are often necessary to find good solutions to NP-hard problems in a reasonable amount of time, while exact algorithms may only be feasible for small instances or when computational resources are abundant.
+
+\subsection{Where to Find the Code}
+The code can be found in the \texttt{source} directory of the repository, under the \href{https://github.com/Dampmar/b2b-np-problem}{GitHub Repository}. The exact brute-force approach is implemented in the file \texttt{brute-force.py}, while the greedy approximation algorithm is implemented in the file \texttt{greedy.py}. Both implementations include functions to read input data, compute coverage, and evaluate solutions based on the defined constraints of the problem. Additionally, the \texttt{benchmark.py} file contains code to generate test instances of the problem and to compare the performance of both algorithms across a range of scenarios. The implementations are designed to be modular and well-documented, allowing for easy understanding and potential modifications for
+
+\section{Algorithmic Approaches}
+Throughout this section, we will discuss two algorithmic approaches to solve the B2B Distribution Problem, the first being an exact brute-force approach which is guaranteed to find the optimal cheapest solution, and the second being a greedy approximation algorithm which is tasked with leveraging a heuristic to find a solution that is not guaranteed to be optimal, but is computationally efficient and can be used for larger instances of the problem. Following the discussion of these two approaches, we will analyze their time complexities and compare their performance on various test cases.
+
+\subsection{Exact Brute-Force Approach}
+The exact brute-force approach to solving the B2B Distribution Problem involves enumerating all possible subsets of candidate facility sites and checking which subsets cover all client sites while minimizing the total operational cost. The algorithm is found in the file \texttt{brute-force.py} and can be summarized as follows:
+
+\begin{enumerate}[label=\textbf{Step \arabic*.}]
+    \item Generate all possible subsets of candidate facility sites.
+    \item For each subset, check if its total sum of operational costs is within the budget, and if it is less than the current minimum cost found. This is a preemptive check to avoid unnecessary coverage checks for subsets that are already too expensive thus saving time.
+    \item If the subset is within budget, check if all client sites are covered by the facilities in the subset. This is done by using a precomputed coverage matrix that indicates which client sites are covered by which candidate facility sites based on the reach radius.
+    \item If all client sites are covered, update the minimum cost and the corresponding subset of facilities if the cost is lower than the previously recorded minimum cost.
+\end{enumerate}
+
+\subsubsection{Time Complexity Analysis}
+The time complexity of the exact brute-force approach is exponential in the number of candidate facility sites, as it requires checking all possible subsets of candidate facilities. Specifically, if there are $m$ candidate facility sites, there are $2^m$ possible subsets to evaluate. For each subset, we need to check if it covers all client sites, which can be done in $O(n)$ time where $n$ is the number of client sites. Therefore, the overall time complexity of the brute-force approach is $\Theta(n \cdot 2^m)$, making it impractical for large instances of the problem.
+
+\subsection{Greedy Approximation Algorithm}
+The greedy approximation algorithm for the B2B Distribution Problem is designed to find a solution that is not guaranteed to be optimal but can be computed efficiently. The algorithm is found in the file \texttt{greedy.py} and can be summarized as follows:
+\begin{enumerate}[label=\textbf{Step \arabic*.}]
+    \item Initialize an empty set of selected facilities and a set of uncovered client sites.
+    \item While there are still uncovered client sites:
+    \begin{enumerate}[label=\textbf{\alph*.}]
+        \item For each candidate facility site, calculate the cost-effectiveness ratio, which is defined as the number of uncovered client sites that would be covered by selecting that facility divided by its operational cost.
+        \item Select the candidate facility site with the highest cost-effectiveness ratio and add it to the set of selected facilities.
+        \item Update the set of uncovered client sites by removing those that are now covered by the newly selected facility.
+    \end{enumerate}
+\end{enumerate}
+
+This is the conventional greedy approach to the Set Cover Problem, which is known to have a logarithmic approximation ratio. In the context of the B2B Distribution Problem, this means that the cost of the solution found by the greedy algorithm will be at most $O(\log n)$ times the cost of the optimal solution, where $n$ is the number of client sites. This is because the greedy algorithm prioritizes facilities that cover the most uncovered client sites per unit of cost, which is a common heuristic for set cover problems; placing emphasis on cost-effectiveness helps to ensure that the algorithm makes efficient choices in terms of coverage and cost despite not guaranteeing an optimal solution.
+
+\subsubsection{Time Complexity Analysis}
+The time complexity of the greedy approximation algorithm is polynomial in the number of candidate facility sites and client sites. Specifically, in each iteration, we need to calculate the cost-effectiveness ratio for each candidate facility site, which takes $O(m \cdot n)$ time where $m$ is the number of candidate facilities and $n$ is the number of client sites. Since we may need to select up to $m$ facilities in the worst case, the overall time complexity of the greedy approximation algorithm is $\Theta(m^2 \cdot n)$, which is significantly more efficient than the exponential time complexity of the brute-force approach.
+
+\section{Performance Comparison}
+To compare the performance of the brute-force and greedy algorithms, we ran both algorithms on a set of test cases with constant client sites (as the number of client sites does not affect the exponential growth of the brute-force algorithm) and varying numbers of candidate facility sites, while keeping the budget and reach radius constant to ensure a fair comparison. The comparison variables ended up being:
+
+\begin{itemize}
+    \item Clients per instance - 12 
+    \item Facilities per instance ($m$) - from 8 to 18
+    \item Trials per $m$ - 5
+    \item Radius - 200 km
+    \item Budget Fraction - $0.5$ of the total facility cost
+    \item Base Seed - $2026$ (for instance generation)
+\end{itemize}
+
+While performing the benchmarking we tracked overall execution time, cost ratio (the cost of the solution found by the greedy algorithm divided by the cost of the optimal solution found by the brute-force algorithm), and measuring the feasibility of the solutions (whether they meet the budget and coverage requirements, which is entirely dependent on the specific instance of the problem). The results of the performance comparison are summarized in the following table:
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.3} % Increase row height
+    \begin{tabular}{l c c c c c c}
+        \toprule
+        \textbf{m} & \textbf{Greedy Avg} & \textbf{BF Avg} & \textbf{Speedup} & \textbf{Problem Feasibility} & \textbf{Greedy Cost Ratio} \\
+        \midrule
+        8  & $11.6 \mu s$ & $0.122 ms$   & $10.6\times$    & $0.4$ & $1.0549$ \\
+        9  & $11.4 \mu s$ & $0.217 ms$   & $19.1\times$    & $0.6$ & $1.0363$ \\
+        10 & $11.0 \mu s$ & $0.446 ms$   & $41.0\times$    & $0.6$ & $1.0349$ \\
+        11 & $14.0 \mu s$ & $0.951 ms$   & $68.7\times$    & $0.6$ & $1.0295$ \\
+        12 & $14.0 \mu s$ & $1.534 ms$   & $112.0\times$   & $1.0$ & $1.1400$ \\
+        13 & $16.0 \mu s$ & $3.224 ms$   & $205.3\times$   & $1.0$ & $1.1255$ \\
+        14 & $24.0 \mu s$ & $6.500 ms$   & $268.4\times$   & $1.0$ & $1.0426$ \\
+        15 & $23.0 \mu s$ & $14.022 ms$  & $609.1\times$   & $1.0$ & $1.1110$ \\
+        16 & $23.0 \mu s$ & $25.461 ms$  & $1107.0\times$  & $1.0$ & $1.0286$ \\
+        17 & $22.0 \mu s$ & $58.162 ms$  & $2617.5\times$  & $0.8$ & $1.0560$ \\
+        18 & $24.0 \mu s$ & $117.202 ms$ & $4936.9\times$  & $0.8$ & $1.0449$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Performance Comparison of Brute-Force and Greedy Algorithms, where $m$ is the number of candidate facility sites, note that feasibility isn't guaranteed; some problems simply might not have a solution for the configuration still computation takes place.}
+    \label{tab:performance}
+\end{table}
+
+While performing the comparisons we managed to observe that the greedy algorithm consistently outperformed the brute-force algorithm in terms of execution time, with speedups ranging from approximately $10\times$ for smaller instances to over $4900\times$ for larger instances. The cost ratio of the greedy solution compared to the optimal solution found by the brute-force algorithm was generally close to $1$ (with a $\pm0.05-0.11$ for the given subset), indicating that the greedy algorithm was able to find solutions that were near-optimal in terms of cost and was also capable of finding the optimal solution in $52.3\%$ of the instances. However, the feasibility of the solutions varied across different instances, with some instances being infeasible for both algorithms due to the constraints of the problem (e.g., budget and coverage requirements). Overall, the greedy approximation algorithm provided a significant improvement in computational efficiency while still yielding solutions that were close to optimal in terms of cost, making it a practical choice for larger instances of the B2B Distribution Problem where the brute-force approach becomes computationally infeasible.
+
+\subsection{Infeasibility Threshold of the Exact Algorithm}
+The benchmark data reveals a consistent doubling of brute-force runtime with each unit increase in $m$, matching the theoretical $\Theta(n \cdot 2^m)$ prediction. From $m = 8$ to $m = 18$, the runtime grew from $0.122\,ms$ to $117.202\,ms$, a factor of approximately $961\times$ over 10 steps, closely matching the expected $2^{10} = 1024$. Extrapolating this doubling trend yields the following estimated runtimes:
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{c r}
+        \toprule
+        \textbf{$m$} & \textbf{Estimated BF Runtime} \\
+        \midrule
+        20 & $\approx 469\,ms$ \\
+        25 & $\approx 15\,s$ \\
+        28 & $\approx 2\,min$ \\
+        30 & $\approx 8\,min$ \\
+        35 & $\approx 4.3\,hours$ \\
+        40 & $\approx 5.8\,days$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Estimated brute-force runtimes extrapolated from benchmark data, assuming runtime doubles per unit increase in $m$.}
+\end{table}
+
+Based on this analysis, the brute-force algorithm becomes effectively infeasible at approximately $m \approx 25$, where runtimes begin to exceed several seconds per instance. Beyond $m \approx 30$, the algorithm is entirely impractical for any real-world use. This behavior is expected for NP-hard problems: since no polynomial-time exact solver is known, the search space grows exponentially and even modest increases in $m$ render computation intractable. In contrast, the greedy algorithm remained stable in the range of $11$--$24\,\mu s$ across all tested values of $m$, confirming its practical scalability well beyond the brute-force infeasibility threshold.
+
+Note that the performance comparison and the overall results will vary based on computer specs, the specific instances of the problem generated, and the random seed used for instance generation. The results presented here are based on a specific set of instances and may not generalize to all possible instances of the B2B Distribution Problem, potentially leading to different cost ratios and feasibility outcomes in other scenarios.
+
+\section{Conclusion}
+Overall, the B2B Distribution Problem is a real-world problem that is NP-hard due to its nature of optimization that directly relates to the Set Cover with a cost component. The exact brute-force approach guarantees finding the optimal solution but is computationally infeasible for larger instances due to its exponential time complexity. In contrast, the greedy approximation algorithm provides a practical near optimal solution with significantly improved computational efficiency, making it suitable for larger instances of the problem. Overall the trade-off between optimality and efficiency is evident in the performance comparison, where greedy algorithms can yield solutions that are close to optimal while being computationally feasible, especially as the size of the problem increases. This highlights the importance of approximation algorithms in solving NP-hard problems in real-world scenarios where exact solutions may not be practical. 
 
 \end{document}
-
+ 
